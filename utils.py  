@@ -1,0 +1,52 @@
+import pandas as pd
+from datetime import datetime, timedelta
+from data_processing import load_data, downsample_split, union_df
+
+def calculate_positive_ratio(sc, categories, start_date, data_path):
+    """Calculate the ratio of positive examples for each category."""
+    sqlContext = SQLContext(sc)
+    
+    data_df = sqlContext.read.parquet(data_path.format(Day=start_date))
+    total_examples = data_df.count()
+
+    ratio_dict = {}
+    for cat in categories:  
+        label_col = 'label_' + cat
+        positive_examples = data_df.filter(col(label_col) == 1).count()
+        ratio_dict[cat] = positive_examples / total_examples
+
+    return ratio_dict
+
+def rolling_window(start_date, subcat, ratio_dict, window_size, profile_features, data_path, np_ratio):
+    """Generate rolling window train/validation/test sets."""  
+    date_format = "%Y-%m-%d"
+    start_dt = datetime.strptime(start_date, date_format)  
+    date_list = [start_dt - timedelta(days=i*3) for i in range(window_size)]
+
+    train_dfs = []
+    validation_dfs = []  
+    test_dfs = []
+
+    for dt in date_list:
+        day = dt.strftime(date_format)
+        data_df = load_data(spark, data_path, day, subcat, profile_features)
+        train_df, validation_df, test_df = downsample_split(data_df, ratio_dict, subcat, np_ratio)
+
+        train_dfs.append(train_df)
+        validation_dfs.append(validation_df)
+        test_dfs.append(test_df)  
+
+    def aggregate_dfs(df_list):
+        agg_df = None  
+        for df in df_list:
+            if agg_df is None:
+                agg_df = df
+            else:
+                agg_df = union_df(agg_df, df)
+        return agg_df
+
+    train_df = aggregate_dfs(train_dfs)
+    validation_df = aggregate_dfs(validation_dfs)
+    test_df = aggregate_dfs(test_dfs)
+
+    return train_df, validation_df, test_df 
