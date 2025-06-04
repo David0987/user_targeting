@@ -38,7 +38,6 @@ It processes user data, trains models for different categories, evaluates them, 
     `pip install -r requirements.txt`
     (Note: `pytest` is needed to run tests: `pip install pytest`)
 
-
 3.  **Configure paths:**
     Update the path configurations in `src/app/config.py` (e.g., `Data_Path`, `Model_Save_Path`) to point to your data and model storage locations. Consider using environment variables for these as commented in the file.
 
@@ -62,6 +61,7 @@ The script will output logs to the console. Models and summaries will be saved t
 To run the unit tests:
 ```bash
 # Ensure PYTHONPATH includes the src directory if running from the project root
+
 export PYTHONPATH=$(pwd)/src:$PYTHONPATH
 pytest tests/
 ```
