@@ -62,7 +62,7 @@ The script will output logs to the console. Models and summaries will be saved t
 To run the unit tests:
 ```bash
 # Ensure PYTHONPATH includes the src directory if running from the project root
-export PYTHONPATH=$(pwd)/src:$PYTHONPATH
+export PYTHONPATH=$(pwd)/src:$PYTHONPATH update
 pytest tests/
 ```
 
